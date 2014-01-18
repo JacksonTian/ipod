@@ -6,125 +6,150 @@
  *
  **/
 
-var fs = require('fs'),
-    lame = require('lame'),
-    async = require('async'),
-    Speaker = require('speaker'),
-    request = require('request'),
-    path = require('path'),
-    utils = require('./libs/utils');
+var fs = require('fs');
+var util = require('util');
+var path = require('path');
+var events = require('events');
+var lame = require('lame');
+var Speaker = require('speaker');
+var http = require('http');
+var https = require('https');
+var utils = require('./lib/utils');
 
-var Player = function(songs, params) {
-    if (!songs) return false;
-    this.streams = [];
-    this.speakers = [];
-    this.list = (typeof(songs) === 'string') ? [{src: songs, _id: 0}] : utils.format(songs);
-    this.status = 'ready';
-    this.src = params && params.srckey ? params.srckey : 'src';
-    this.downloads = params && params.downloads ? params.downloads : utils.getUserHome();
-}
-
-// 播放
-Player.prototype.play = function(done, selected) {
-    var self = this,
-        songs = selected ? selected : self.list;
-    if (!this.done && typeof(done) === 'function') self._done = done;
-    var play = function(song, cb) {
-        self.read((typeof(song) === 'string') ? song : song[self.src], function(err, p) {
-            if (err) return cb(err);
-            var l = new lame.Decoder();
-            self.streams.push(l);
-            p.pipe(l)
-                .on('format', function(f) {
-                    var s = new Speaker(f);
-                    this.pipe(s);
-                    self.speakers.push({
-                        rs: this,
-                        speaker: s
-                    });
-                    self.changeStatus('playing', song);
-                })
-                .on('finish', function() {
-                    self.changeStatus('playend', song);
-                    cb(null); // switch to next one
-                });
-            p.on('error', function(err) {
-                self.changeStatus('error', err);
-                cb(err);
-            });
-        });
-    };
-    if (self.list.length <= 0) return false;
-    async.eachSeries(songs, play, function(err) {
-        if (err) throw err;
-        if (typeof(done) === 'function') done(err, self);
-        return true;
-    });
-    return self;
+/**
+ * 播放器构造函数
+ */
+var Player = function (songs, options) {
+  events.EventEmitter.call(this);
+  this.currentIndex = -1;
+  this.list = songs || [];
+  options = options || {};
+  this.mode = options.mode || 'loop';
+  this.downloads = options.downloads || path.join(utils.getUserHome(), '_player');
 };
 
-Player.prototype.next = function() {
-    if (this.status !== 'playing') return false;
-    var playing = this.playing,
-        list = this.list,
-        next = list[playing._id + 1];
-    if (!next) return false;
-    this.stop();
-    this.play(this._done ? this._done : null, list.slice(next._id));
-    return true;
-}
+// 继承EventEmitter
+util.inherits(Player, events.EventEmitter);
 
-Player.prototype.add = function(song) {
-    if (!this.list) this.list = [];
-    this.list.push(song);
-}
+// 播放
+Player.prototype.play = function () {
+  var self = this;
+  var src = self.nextSong();
+  if (!src) {
+    // 演出结束
+    self.emit('finish');
+    self.currentIndex = -1;
+    return;
+  }
+  self.read(src, function (readable) {
+    var decoder = new lame.Decoder();
+    var speaker = new Speaker();
+    self.currentDecoder = decoder;
+    self.currentSpeaker = speaker;
+    self.currentStream = readable;
+    readable.pipe(decoder).pipe(speaker);
+    self.emit('playing', src);
 
-Player.prototype.on = function(event, callback) {
-    if (!this.event) this.event = {};
-    this.event[event] = callback;
-    return this;
-}
+    speaker.on('close', function () {
+      self.emit('playend', src);
+      // 继续播放
+      self.play();
+    });
 
-Player.prototype.changeStatus = function(status, dist) {
-    this.status = status;
-    this[status] = dist;
-    if (this.event && this.event[status] && typeof(this.event[status]) == 'function') {
-        this.event[status](this[status]);
+    readable.on('error', function (err) {
+      self.emit('error', err);
+      // 继续播放
+      self.play();
+    });
+  });
+};
+
+Player.prototype.next = function () {
+  this.stop();
+  this.play();
+};
+
+Player.prototype.nextSong = function () {
+  switch (this.mode) {
+  case 'loop':
+    this.currentIndex++;
+    if (this.currentIndex >= this.list.length) {
+      this.currentIndex = 0;
     }
-}
+    break;
+  case 'random':
+    this.currentIndex = Math.floor(Math.random() * this.list.length);
+    break;
+  case 'order':
+    this.currentIndex++;
+  }
+  return this.list[this.currentIndex];
+};
 
+/**
+ * 添加新歌
+ */
+Player.prototype.add = function(song) {
+  this.list.push(song);
+};
+
+/**
+ * 停止当前歌曲
+ */
 Player.prototype.stop = function() {
-    if (!(this.streams && this.streams.length && this.streams.length > 0)) return false;
-    this.speakers[this.speakers.length - 1].rs.unpipe();
-    this.speakers[this.speakers.length - 1].speaker.end();
-    return false;
-}
+  if (this.currentSpeaker) {
+    this.currentSpeaker.removeAllListeners('close');
+    this.currentSpeaker.end();
+  }
+};
 
-Player.prototype.download = function(src, callback) {
-    var self = this;
-    request.get(src, {
-        encoding: null
-    }, function(err, res, buff) {
-        if (err) return callback(err);
-        var filename = utils.fetchName(src);
-        fs.writeFile(path.join(self.downloads, filename), buff, function(err) {
-            callback(err, path.join(self.downloads, filename));
-        });
-    });
-}
+/**
+ * 下载歌曲
+ */
+Player.prototype.download = function (src, cached, callback) {
+  var self = this;
+  self.emit('downloading', src);
+  var urllib = src.indexOf('https') !== -1 ? https : http;
+  urllib.get(src, function (readable) {
+    // 创建只写流
+    var writable = fs.createWriteStream(cached);
+    // 管道
+    readable.pipe(writable);
 
-Player.prototype.read = function(src, callback) {
-    var self = this;
-    if (!(src.indexOf('http') == 0 || src.indexOf('https') == 0)) return callback(null, fs.createReadStream(src));
-    var filename = utils.fetchName(src);
-    fs.exists(path.join(self.downloads, filename), function(exists) {
-        if (exists) return callback(null, fs.createReadStream(path.join(self.downloads, filename)));
-        self.changeStatus('downloading', src);
-        self.download(src, function(err, file) {
-            if (err) return callback(err);
-            callback(null, fs.createReadStream(file));
-        });
+    // 错误事件
+    writable.on('error', function (err) {
+      self.emit('error', err);
     });
-}
+
+    readable.on('end', function () {
+      self.emit('downloaded', src);
+    });
+    // 返回网络流
+    callback(readable);
+  });
+};
+
+/**
+ * 从src读取内容，如果是网络内容，返回网络下载流；如果是磁盘文件，返回只读流
+ */
+Player.prototype.read = function (src, callback) {
+  var self = this;
+  // 从磁盘读
+  if (src.indexOf('http') === -1) {
+    return callback(fs.createReadStream(src));
+  }
+  // 获取文件名
+  var filename = utils.fetchName(src);
+  // 缓存的目标文件名
+  var cached = path.join(self.downloads, filename);
+  fs.exists(cached, function (exists) {
+    if (exists) {
+      // 从本地播放
+      return callback(fs.createReadStream(cached));
+    }
+    // 从网络下载
+    self.download(src, cached, callback);
+  });
+};
 
 module.exports = Player;

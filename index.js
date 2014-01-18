@@ -133,11 +133,11 @@ Player.prototype.download = function (src, cached, callback) {
  * 从src读取内容，如果是网络内容，返回网络下载流；如果是磁盘文件，返回只读流
  */
 Player.prototype.read = function (src, callback) {
-  var self = this;
   // 从磁盘读
   if (src.indexOf('http') === -1) {
     return callback(fs.createReadStream(src));
   }
+  var self = this;
   // 获取文件名
   var filename = utils.fetchName(src);
   // 缓存的目标文件名

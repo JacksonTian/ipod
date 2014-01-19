@@ -22,8 +22,6 @@
   },
   "dependencies": {
     "speaker": "*",
-    "lame": "*",
-    "async": "*",
-    "request": "*"
+    "lame": "*"
   }
 }

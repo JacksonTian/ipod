@@ -1,27 +1,36 @@
 {
-  "name": "player",
-  "version": "0.1.1",
+  "name": "ipod",
+  "version": "0.1.0",
   "description": "command line interface mp3 player based on Node.js",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "./node_modules/mocha/bin/mocha -R spec"
+  },
+  "bin": {
+    "ipod": "bin/ipod"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/turingou/player.git"
+    "url": "https://github.com/JacksonTian/ipod.git"
   },
   "keywords": [
     "player",
     "cli",
-    "mp3"
+    "mp3",
+    "ipod"
   ],
-  "author": "turing",
+  "author": "Jackson Tian",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/turingou/player/issues"
+    "url": "https://github.com/JacksonTian/ipod/issues"
   },
   "dependencies": {
     "speaker": "*",
-    "lame": "*"
+    "lame": "*",
+    "optimist": "*"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "should": "*"
   }
 }

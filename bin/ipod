@@ -1,0 +1,23 @@
+#!/usr/bin/env node
+
+var path = require('path');
+var argv = require('optimist')
+    .usage('Usage: $0 [folder] --mode [loop/random]')
+    .default('mode', 'loop')
+    .argv;
+
+var folder = path.resolve(argv._[0]);
+
+var IPod = require('../');
+var ipod = new IPod([], {
+  mode: argv.mode
+});
+
+ipod.addFolder(folder, function (err) {
+  if (err) {
+    console.log(err);
+    return;
+  }
+  // 开始播放
+  ipod.play();
+});

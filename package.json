@@ -1,10 +1,21 @@
 {
   "name": "ipod",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "command line interface mp3 player based on Node.js",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha -R spec"
+    "test": "make test"
+  },
+  "config": {
+    "blanket": {
+      "pattern": "ipod/lib",
+      "data-cover-flags": {
+        "debug": false
+      }
+    },
+    "travis-cov": {
+      "threshold": 98
+    }
   },
   "bin": {
     "ipod": "bin/ipod"
@@ -31,6 +42,9 @@
   },
   "devDependencies": {
     "mocha": "*",
-    "should": "*"
+    "should": "*",
+    "blanket": "*",
+    "travis-cov": "*",
+    "mocha-lcov-reporter": "*"
   }
 }

@@ -2,3 +2,4 @@ node_modules
 .DS_*
 *.sublime*
 npm-debug.*
+coverage.html

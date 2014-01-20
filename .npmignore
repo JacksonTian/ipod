@@ -2,3 +2,5 @@ demo
 node_modules
 .DS_*
 npm-debug.*
+test
+coverage.html

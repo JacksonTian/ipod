@@ -46,7 +46,7 @@ describe('download', function () {
     });
   });
   var ipod = new IPod();
-  xit('download error url', function (done) {
+  it('download error url', function (done) {
     ipod.download('http://some.url/filename.mp3', filepath, function (err) {
       should.exist(err);
       err.should.have.property('message', 'getaddrinfo ENOTFOUND');
@@ -55,7 +55,7 @@ describe('download', function () {
   });
 
   it('download 404 url', function (done) {
-    var url = 'http://zhangmenshiting.baidu.com/data2/music/33909933/31627254108000128.mp31?xcode=0bad1c5e5224e56ff31000774b753c9492822cd485d59822';
+    var url = 'http://html5ify.qiniudn.com/404.mp3';
     ipod.download(url, filepath, function (err) {
       should.exist(err);
       err.should.have.property('message', 'resource invalid');
@@ -73,7 +73,7 @@ describe('download', function () {
   });
 
   it('download ok url', function (done) {
-    var url = 'http://zhangmenshiting.baidu.com/data2/music/33909933/31627254108000128.mp3?xcode=0bad1c5e5224e56ff31000774b753c9492822cd485d59822';
+    var url = 'http://html5ify.qiniudn.com/demo.mp3';
     ipod.download(url, filepath, function (err, readable) {
       should.not.exist(err);
       readable.should.have.property('readable', true);
@@ -176,7 +176,7 @@ describe('read', function () {
 
   describe('read from net', function () {
     before(function (done) {
-      fs.unlink(path.join(os.tmpdir(), '31627254108000128.mp3'), function () {
+      fs.unlink(path.join(os.tmpdir(), 'demo.mp3'), function () {
         done();
       });
     });
@@ -185,7 +185,7 @@ describe('read', function () {
       var ipod = new IPod(  {
         downloads: os.tmpdir()
       });
-      var url = 'http://zhangmenshiting.baidu.com/data2/music/33909933/31627254108000128.mp3?xcode=0bad1c5e5224e56ff31000774b753c9492822cd485d59822';
+      var url = 'http://html5ify.qiniudn.com/demo.mp3';
       ipod.read(url, function (err, readable) {
         should.not.exist(err);
         readable.should.have.property('readable', true);

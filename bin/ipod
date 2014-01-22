@@ -26,3 +26,10 @@ ipod.addFolder(folder, function (err) {
   // 开始播放
   ipod.play();
 });
+
+// 改title
+process.title = "ipod";
+
+ipod.on('playing', function (src) {
+  console.log('playing %s', src);
+});

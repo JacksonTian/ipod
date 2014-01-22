@@ -47,6 +47,7 @@ describe('download', function () {
   });
   var ipod = new IPod();
   it('download error url', function (done) {
+    var ipod = new IPod();
     ipod.download('http://some.url/filename.mp3', filepath, function (err) {
       should.exist(err);
       err.should.have.property('message', 'getaddrinfo ENOTFOUND');

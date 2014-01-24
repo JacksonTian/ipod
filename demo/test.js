@@ -1,3 +1,4 @@
+var fs = require('fs');
 var lame = require('lame');
 var Speaker = require('speaker');
 
@@ -8,9 +9,7 @@ var getUrlLib = function (url) {
   return require('http');
 };
 
-var src = 'http://zhangmenshiting.baidu.com/data2/music/10470876/7343701219600128.mp3?xcode=351634fd3718fed5abb2f9389b9d4097b9319fcd4157c2b2';
-var src = 'http://zhangmenshiting.baidu.com/data2/music/33909933/31627254108000128.mp3?xcode=0bad1c5e5224e56ff31000774b753c9492822cd485d59822';
-// var src = 'http://nodejs.org/api/http.html#http_http_get_options_callback';
+var src = 'http://zhangmenshiting.baidu.com/data2/music/64022204/73383361390489261128.mp3?xcode=6e2e952fc4b13423efa82c018e4ac7c5ec0497093d29d6f3';
 var urllib = getUrlLib(src);
 var request = urllib.get(src, function (res) {
   if (res.statusCode !== 200) {
@@ -19,18 +18,33 @@ var request = urllib.get(src, function (res) {
   }
   console.log(res.headers);
   console.log("Got response: " + res.statusCode);
-  var decoder = new lame.Decoder();
-  var speaker = new Speaker();
-  res.pipe(decoder).pipe(speaker);
+  var writer = fs.createWriteStream('./demo3.mp3');
+  res.pipe(writer);
+  console.time('res');
+  var count = 0;
+  res.on('data', function () {
+    count++;
+  });
   res.on('end', function () {
-    console.log('res end', new Date());
+    console.timeEnd('res');
+    console.log(count);
   });
-  decoder.on('end', function () {
-    console.log('decoder end', new Date());
+  res.on('close', function () {
+    console.log('res close', new Date());
   });
-  speaker.on('close', function () {
-    console.log('speaker close', new Date());
+  writer.on('finish', function() {
+    console.error('all writes are now complete.', new Date());
   });
+  var decoder = new lame.Decoder();
+  // var speaker = new Speaker();
+  res.pipe(decoder);
+  // decoder.pipe(speaker);
+  // decoder.on('end', function () {
+  //   console.log('decoder end', new Date());
+  // });
+  // speaker.on('close', function () {
+  //   console.log('speaker close', new Date());
+  // });
 });
 
 request.on('error', function(e) {

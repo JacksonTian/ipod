@@ -2,6 +2,7 @@ var Player = require('../index');
 
 // 播放
 var player = new Player([
+    'http://zhangmenshiting.baidu.com/data2/music/64022204/73383361390489261128.mp3?xcode=6e2e952fc4b13423efa82c018e4ac7c5ec0497093d29d6f3',
     __dirname + '/demo.mp3',
     __dirname + '/demo2.mp3'
 ]);

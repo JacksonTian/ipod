@@ -39,7 +39,8 @@
     "speaker": "*",
     "lame": "*",
     "optimist": "*",
-    "debug": "*"
+    "debug": "*",
+    "pool_stream": "*"
   },
   "devDependencies": {
     "mocha": "*",

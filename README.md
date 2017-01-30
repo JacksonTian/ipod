@@ -39,19 +39,19 @@ ipod.add('http://someurl.com/anothersong.mp3');
 
 // event: on playing
 ipod.on('playing',function(item){
-    console.log('im playing... src:' + item);
+  console.log('im playing... src:' + item);
 });
 
 // event: on playend
 ipod.on('playend',function(item){
-    // return a playend item
-    console.log('src:' + item + ' play done, switching to next one ...');
+  // return a playend item
+  console.log('src:' + item + ' play done, switching to next one ...');
 });
 
 // event: on error
 ipod.on('error', function(err){
-    // when error occurs
-    console.log(err);
+  // when error occurs
+  console.log(err);
 });
 
 // stop playing

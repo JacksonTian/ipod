@@ -1,8 +1,13 @@
 #!/usr/bin/env node
 
-var path = require('path');
-var optimist = require('optimist');
-var argv = optimist.usage('Usage: $0 [folder] --mode [loop/random]')
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+
+const optimist = require('optimist');
+
+const argv = optimist.usage('Usage: $0 [folder] --mode [loop/random]')
   .default('mode', 'loop')
   .argv;
 
@@ -18,18 +23,19 @@ var ipod = new IPod([], {
   mode: argv.mode
 });
 
-ipod.addFolder(folder, function (err) {
-  if (err) {
-    console.log(err);
-    return;
-  }
-  // 开始播放
-  ipod.play();
+var files = fs.readdirSync(folder);
+
+files.filter((filename) => {
+  return path.extname(filename) === '.mp3';
+}).forEach((filename) => {
+  ipod.add(path.join(folder, filename));
 });
 
-// 改title
-process.title = "ipod";
-
-ipod.on('playing', function (src) {
+ipod.on('playing', (src) => {
   console.log('playing %s', src);
+  // 改title
+  process.title = `ipod - playing ${src}`;
 });
+
+// 开始播放
+ipod.play();

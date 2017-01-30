@@ -1,21 +1,10 @@
 {
   "name": "ipod",
-  "version": "0.2.4",
+  "version": "1.0.0",
   "description": "command line interface mp3 player based on Node.js",
-  "main": "index.js",
+  "main": "lib/player",
   "scripts": {
     "test": "make test"
-  },
-  "config": {
-    "blanket": {
-      "pattern": "ipod/lib",
-      "data-cover-flags": {
-        "debug": false
-      }
-    },
-    "travis-cov": {
-      "threshold": 98
-    }
   },
   "bin": {
     "ipod": "bin/ipod"
@@ -36,11 +25,12 @@
     "url": "https://github.com/JacksonTian/ipod/issues"
   },
   "dependencies": {
-    "speaker": "*",
+    "debug": "*",
+    "httpx": "^2.0.0",
     "lame": "*",
     "optimist": "*",
-    "debug": "*",
-    "pool_stream": "*"
+    "pool_stream": "*",
+    "speaker": "*"
   },
   "devDependencies": {
     "mocha": "*",
